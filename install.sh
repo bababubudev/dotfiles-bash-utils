@@ -258,14 +258,12 @@ sudo apt update
 sudo apt install -y net-tools lsof
 
 echo ""
-echo "Setup complete! Run 'source ~/.bashrc' or restart terminal."
+echo "Setup complete! Run 'source ~/.bashrc' or restart your terminal."
 echo ""
 echo "Available commands"
-echo ""
-echo "cdup	<dir_name>	- Navigate up to find directory"
-echo "cddown	<dir_name>	- Navigate down to find directory"
-echo "table	<csv_file>	- Display CSV in table format"
-echo ""
-echo "lookport	<port>		- Show processes on port"
-echo "killport	<port>		- Kill processes on port"
-
+echo "  ll                  - Alias for 'ls -la' (detailed list)"
+echo "  cdup <dir_name>     - Navigate up to find directory"
+echo "  cddown <dir_name>   - Navigate down to find directory"
+echo "  table <csv_file>    - Display CSV in table format"
+echo "  lookport <port>     - Show processes on port"
+echo "  killport <port>     - Kill processes on port"
