@@ -10,6 +10,7 @@ if ! echo "$PATH" | grep -q "$UTILS_DIR"; then
 fi
 
 cat << 'EOF' > ~/.bash_functions
+
 cdup() {
 	if [ $# -eq 0 ]; then
 		echo "Usage: cdup <directory>"
