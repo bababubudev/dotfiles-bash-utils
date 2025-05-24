@@ -327,6 +327,29 @@ get_current_date() {
   date "+%Y-%m-%d"
 }
 
+get_day_indicator() {
+  local original_date="$1"
+  local converted_date="$2"
+
+  if [[ "$original_date" == "$converted_date" ]]; then
+    echo ""
+  else
+    local orig_epoch=$(date -d "$original_date" "+%s")
+    local conv_epoch=$(date -d "$converted_date" "+%s")
+    local diff_days=$(( (conv_epoch - orig_epoch) / 86400 ))
+
+    if [[ $diff_days -eq 1 ]]; then
+      echo " (next day)"
+    elif [[ $diff_days -eq -1 ]]; then
+      echo " (previous day)"
+    elif [[ $diff_days -gt 1 ]]; then
+      echo " (+$diff_days days)"
+    elif [[ $diff_days -lt -1 ]]; then
+      echo " ($diff_days days)"
+    fi
+  fi
+}
+
 parse_time_with_date() {
   local time="$1"
 
@@ -347,7 +370,9 @@ convert_to_local() {
   local from_tz="$2"
 
 	local normalized_from=$(normalize_timezone "$from_tz")
+
   local full_time=$(parse_time_with_date "$time")
+	local original_date=$(echo "$full_time" | cut -d' ' -f1)
 
 	local epoch_time
   if ! epoch_time=$(TZ="$normalized_from" date -d "$full_time" "+%s" 2>/dev/null); then
@@ -355,13 +380,16 @@ convert_to_local() {
     return 1
   fi
 
-	local result
-  if ! result=$(date -d "@$epoch_time" "+%Y-%m-%d %H:%M (%Z)" 2>/dev/null); then
+	local result_full
+  if ! result_full=$(date -d "@$epoch_time" "+%Y-%m-%d %H:%M (%Z)" 2>/dev/null); then
     echo "Error: Failed to convert to local time"
     return 1
   fi
 
-  echo "$time $from_tz is $result in your local time"
+	local converted_date=$(echo "$result_full" | cut -d' ' -f1)
+	local day_indicator=$(get_day_indicator "$original_date" "$converted_date")
+
+  echo "$time $from_tz is $result_full$day_indicator in your local time"
 }
 
 convert_from_to() {
@@ -373,6 +401,7 @@ convert_from_to() {
   local normalized_to=$(normalize_timezone "$to_tz")
 
 	local full_time=$(parse_time_with_date "$time")
+	local original_date=$(echo "$full_time" | cut -d' ' -f1)
 
 	local epoch_time
   if ! epoch_time=$(TZ="$normalized_from" date -d "$full_time" "+%s" 2>/dev/null); then
@@ -380,13 +409,16 @@ convert_from_to() {
     return 1
   fi
 
-  local result
-  if ! result=$(TZ="$normalized_to" date -d "@$epoch_time" "+%Y-%m-%d %H:%M (%Z)" 2>/dev/null); then
+  local result_full
+  if ! result_full=$(TZ="$normalized_to" date -d "@$epoch_time" "+%Y-%m-%d %H:%M (%Z)" 2>/dev/null); then
     echo "Error: Invalid target timezone '$to_tz'"
     return 1
   fi
 
-	echo "$time $from_tz is $result"
+	local converted_date=$(echo "$result_full" | cut -d' ' -f1)
+  local day_indicator=$(get_day_indicator "$original_date" "$converted_date")
+
+  echo "$time $from_tz is $result_full$day_indicator"
 }
 
 convert_now_to_target() {
