@@ -57,8 +57,9 @@ lookport 3000
 killport 8080
 
 # Timezone conversion from pst to eest or from local to pst
-tzone --to 20:00 PST EEST
-tzone --from 20:00 PST
+tzone 2:00 EST	        -Convert 2:00 EST to local time
+tzone --to 2:00 EST UTC	-Convert 2:00 EST to UTC
+tzone --to PST	        -Convert current local time to PST
 ```
 
 ## What It Does
@@ -89,7 +90,8 @@ The installer:
 ~/.local/bin/
 ├── table      # CSV table formatter
 ├── lookport   # Port process viewer
-└── killport   # Port process killer
+├── killport   # Port process killer
+└── tzone      # Timezone converter
 
 ~/.bash_functions            # Navigation functions (cdup, cddown)
 ~/.bashrc | ~/.zshrc         # Updated with aliases and sourcing

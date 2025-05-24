@@ -247,43 +247,51 @@ cat <<'EOF' >"$UTILS_DIR/tzone"
 #!/bin/bash
 
 show_help() {
-	echo "Usage:"
-	echo "	tzone 20:00 PST             Convert to local timezone"
-  echo "  tzone --to 20:00 PST EEST   Convert to specified timezone"
-  echo "  tzone --from 20:00 PST      Convert from local to specified timezone"
+  echo "Usage:"
+  echo "  tzone <time> <from_tz>                 Convert to local timezone"
+  echo "  tzone --to <time> <from_tz> <to_tz>    Convert time from one timezone to another"
+  echo "  tzone --to <time> <from_tz>            Convert time from given timezone to local time"
+  echo "  tzone --to <to_tz>                     Convert current local time to another timezone"
 }
 
 convert_to_local() {
   local time="$1"
   local from="$2"
-  TZ="$from" date --date="time" + "$time $from is %Y-%m-%d %H:%M (%Z) in you local time"
+  local result=$(TZ="$from" date --date="$time" "+%Y-%m-%d %H:%M (%Z)")
+  echo "$time $from is $result in your local time"
 }
 
-convert_to_target() {
+convert_from_to() {
   local time="$1"
   local from="$2"
   local to="$3"
-  local utc_time
-  utc_time=$(TZ="$from" date -u --date="$time" "+%Y-%m-%d %H:%M")
-  TZ="$to" date --date="$utc_time UTC" +"$time $from is %Y-%m-%d %H:%M (%Z) in $to"
+
+  local from_time=$(TZ="$from" date --date="$time" "+%Y-%m-%d %H:%M")
+  local result=$(TZ="$to" date --date="$from_time" "+%Y-%m-%d %H:%M (%Z)")
+  echo "$time $from is $result in $to"
 }
 
-convert_from_local() {
-  local time="$1"
-  local to="$2"
-  local utc_time
-  utc_time=$(date -u --date="$time" "+%Y-%m-%d %H:%M")
-  TZ="$to" date --date="$utc_time UTC" +"$time local is %Y-%m-%d %H:%M (%Z) in $to"
+convert_now_to_target() {
+  local to="$1"
+  local now_time=$(date "+%Y-%m-%d %H:%M")
+  local result=$(TZ="$to" date --date="$now_time" "+%Y-%m-%d %H:%M (%Z)")
+  echo "Local time $now_time is $result in $to"
 }
 
 if [[ "$1" == "--to" ]]; then
-    convert_to_target "$2" "$3" "$4"
-elif [[ "$1" == "--from" ]]; then
-    convert_from_local "$2" "$3"
-elif [[ "$1" == "--help" || "$#" -lt 2 ]]; then
+  if [[ $# -eq 4 ]]; then
+    convert_from_to "$2" "$3" "$4"
+  elif [[ $# -eq 3 ]]; then
+    convert_to_local "$2" "$3"
+  elif [[ $# -eq 2 ]]; then
+    convert_now_to_target "$2"
+  else
     show_help
+  fi
+elif [[ $# -eq 2 ]]; then
+  convert_to_local "$1" "$2"
 else
-    convert_to_local "$1" "$2"
+  show_help
 fi
 EOF
 
