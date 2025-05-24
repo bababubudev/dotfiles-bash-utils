@@ -292,12 +292,11 @@ chmod +x "$UTILS_DIR/lookport"
 chmod +x "$UTILS_DIR/killport"
 chmod +x "$UTILS_DIR/tzone"
 
-echo "" >>~/.bashrc
-echo "# CUSTOM UTILITIES" >>~/.bashrc
-echo "source ~/.bash_functions" >>~/.bashrc
-echo "" >>~/.bashrc
-echo "# Custom aliases" >>~/.bashrc
-echo "alias ll='ls -la'" >>~/.bashrc
+if ! grep -q 'source ~/.bash_functions' ~/.bashrc; then
+	echo "" >>~/.bashrc
+	echo "# CUSTOM UTILITIES" >>~/.bashrc
+	echo "source ~/.bash_functions" >>~/.bashrc
+fi
 
 echo "Installing required packages..."
 sudo apt update

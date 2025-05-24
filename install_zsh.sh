@@ -255,7 +255,8 @@ show_help() {
 convert_to_local() {
   local time="$1"
   local from="$2"
-  TZ="$from" date --date="time" + "$time $from is %Y-%m-%d %H:%M (%Z) in you local time"
+  result=$(TZ="$from" date --date="$time" "+%Y-%m-%d %H:%M (%Z)")
+  echo "$time $from is $result in your local time"
 }
 
 convert_to_target() {
@@ -264,7 +265,9 @@ convert_to_target() {
   local to="$3"
   local utc_time
   utc_time=$(TZ="$from" date -u --date="$time" "+%Y-%m-%d %H:%M")
-  TZ="$to" date --date="$utc_time UTC" +"$time $from is %Y-%m-%d %H:%M (%Z) in $to"
+  local result
+  result=$(TZ="$to" date --date="$utc_time UTC" "+%Y-%m-%d %H:%M (%Z)")
+  echo "$time $from is $result in $to"
 }
 
 convert_from_local() {
@@ -272,7 +275,9 @@ convert_from_local() {
   local to="$2"
   local utc_time
   utc_time=$(date -u --date="$time" "+%Y-%m-%d %H:%M")
-  TZ="$to" date --date="$utc_time UTC" +"$time local is %Y-%m-%d %H:%M (%Z) in $to"
+  local result
+  result=$(TZ="$to" date --date="$utc_time UTC" "+%Y-%m-%d %H:%M (%Z)")
+  echo "$time local is $result in $to"
 }
 
 if [[ "$1" == "--to" ]]; then
@@ -291,12 +296,11 @@ chmod +x "$UTILS_DIR/lookport"
 chmod +x "$UTILS_DIR/killport"
 chmod +x "$UTILS_DIR/tzone"
 
-echo "" >>~/.zshrc
-echo "# CUSTOM UTILITIES" >>~/.zshrc
-echo "source ~/.zsh_functions" >>~/.zshrc
-echo "" >>~/.zshrc
-echo "# Custom aliases" >>~/.zshrc
-echo "alias ll='ls -la'" >>~/.zshrc
+if ! grep -q 'source ~/.zsh_functions' ~/.zshrc; then
+  echo "" >>~/.zshrc
+  echo "# CUSTOM UTILITIES" >>~/.zshrc
+  echo "source ~/.zsh_functions" >>~/.zshrc
+fi
 
 echo "Installing required packages..."
 sudo apt update
