@@ -252,30 +252,157 @@ show_help() {
   echo "  tzone --to <time> <from_tz> <to_tz>    Convert time from one timezone to another"
   echo "  tzone --to <time> <from_tz>            Convert time from given timezone to local time"
   echo "  tzone --to <to_tz>                     Convert current local time to another timezone"
+  echo ""
+  echo "Time formats: HH:MM or YYYY-MM-DD HH:MM"
+  echo "Timezone examples: UTC, PST, EST, EEST, Europe/Helsinki, America/New_York"
 }
+
+
+normalize_timezone() {
+  local tz="$1"
+  case "$tz" in
+    # US Timezones
+    "PST") echo "America/Los_Angeles" ;;
+    "PDT") echo "America/Los_Angeles" ;;
+    "MST") echo "America/Denver" ;;
+    "MDT") echo "America/Denver" ;;
+    "CST") echo "America/Chicago" ;;
+    "CDT") echo "America/Chicago" ;;
+    "EST") echo "America/New_York" ;;
+    "EDT") echo "America/New_York" ;;
+    "AKST") echo "America/Anchorage" ;;
+    "AKDT") echo "America/Anchorage" ;;
+    "HST") echo "Pacific/Honolulu" ;;
+
+    # European Timezones
+    "GMT") echo "Europe/London" ;;
+    "BST") echo "Europe/London" ;;
+    "CET") echo "Europe/Berlin" ;;
+    "CEST") echo "Europe/Berlin" ;;
+    "EET") echo "Europe/Helsinki" ;;
+    "EEST") echo "Europe/Helsinki" ;;
+    "WET") echo "Europe/Lisbon" ;;
+    "WEST") echo "Europe/Lisbon" ;;
+    "MSK") echo "Europe/Moscow" ;;
+
+    # Asian Timezones
+    "JST") echo "Asia/Tokyo" ;;
+    "KST") echo "Asia/Seoul" ;;
+    "CCST") echo "Asia/Shanghai" ;; # !!Conflicted with US CST
+    "IST") echo "Asia/Kolkata" ;;
+    "SGT") echo "Asia/Singapore" ;;
+    "HKT") echo "Asia/Hong_Kong" ;;
+    "PHT") echo "Asia/Manila" ;;
+    "WIB") echo "Asia/Jakarta" ;;
+    "ICT") echo "Asia/Bangkok" ;;
+
+    # Australian Timezones
+    "AEST") echo "Australia/Sydney" ;;
+    "AEDT") echo "Australia/Sydney" ;;
+    "AWST") echo "Australia/Perth" ;;
+    "ACST") echo "Australia/Adelaide" ;;
+    "ACDT") echo "Australia/Adelaide" ;;
+
+    # Other Common Timezones
+    "UTC") echo "UTC" ;;
+    "NZST") echo "Pacific/Auckland" ;;
+    "NZDT") echo "Pacific/Auckland" ;;
+    "CAT") echo "Africa/Johannesburg" ;;
+    "WAT") echo "Africa/Lagos" ;;
+    "EAT") echo "Africa/Nairobi" ;;
+    "BRT") echo "America/Sao_Paulo" ;;
+    "ART") echo "America/Argentina/Buenos_Aires" ;;
+    "CLT") echo "America/Santiago" ;;
+    "PET") echo "America/Lima" ;;
+
+    # Middle East
+    "GST") echo "Asia/Dubai" ;;
+    "AST") echo "Asia/Riyadh" ;;
+
+    *) echo "$tz" ;;
+  esac
+}
+
+get_current_date() {
+  date "+%Y-%m-%d"
+}
+
+parse_time_with_date() {
+  local time="$1"
+
+  if [[ "$time" =~ ^[0-9]{1,2}:[0-9]{2}$ ]]; then
+    # Just time given, add today's date
+    echo "$(get_current_date) $time:00"
+  elif [[ "$time" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]]+[0-9]{1,2}:[0-9]{2}$ ]]; then
+    # Full date-time given
+    echo "$time:00"
+  else
+    echo "$time"
+  fi
+}
+
 
 convert_to_local() {
   local time="$1"
-  local from="$2"
-  local result=$(TZ="$from" date --date="$time" "+%Y-%m-%d %H:%M (%Z)")
-  echo "$time $from is $result in your local time"
+  local from_tz="$2"
+
+	local normalized_from=$(normalize_timezone "$from_tz")
+  local full_time=$(parse_time_with_date "$time")
+
+	local epoch_time
+  if ! epoch_time=$(TZ="$normalized_from" date -d "$full_time" "+%s" 2>/dev/null); then
+    echo "Error: Invalid time format or timezone '$from_tz'"
+    return 1
+  fi
+
+	local result
+  if ! result=$(date -d "@$epoch_time" "+%Y-%m-%d %H:%M (%Z)" 2>/dev/null); then
+    echo "Error: Failed to convert to local time"
+    return 1
+  fi
+
+  echo "$time $from_tz is $result in your local time"
 }
 
 convert_from_to() {
   local time="$1"
-  local from="$2"
-  local to="$3"
+  local from_tz="$2"
+  local to_tz="$3"
 
-  local from_time=$(TZ="$from" date --date="$time" "+%Y-%m-%d %H:%M")
-  local result=$(TZ="$to" date --date="$from_time" "+%Y-%m-%d %H:%M (%Z)")
-  echo "$time $from is $result in $to"
+	local normalized_from=$(normalize_timezone "$from_tz")
+  local normalized_to=$(normalize_timezone "$to_tz")
+
+	local full_time=$(parse_time_with_date "$time")
+
+	local epoch_time
+  if ! epoch_time=$(TZ="$normalized_from" date -d "$full_time" "+%s" 2>/dev/null); then
+    echo "Error: Invalid time format or source timezone '$from_tz'"
+    return 1
+  fi
+
+  local result
+  if ! result=$(TZ="$normalized_to" date -d "@$epoch_time" "+%Y-%m-%d %H:%M (%Z)" 2>/dev/null); then
+    echo "Error: Invalid target timezone '$to_tz'"
+    return 1
+  fi
+
+	echo "$time $from_tz is $result"
 }
 
 convert_now_to_target() {
-  local to="$1"
-  local now_time=$(date "+%Y-%m-%d %H:%M")
-  local result=$(TZ="$to" date --date="$now_time" "+%Y-%m-%d %H:%M (%Z)")
-  echo "Local time $now_time is $result in $to"
+   local to_tz="$1"
+  local normalized_to=$(normalize_timezone "$to_tz")
+
+  local now_epoch=$(date "+%s")
+
+  local result
+  if ! result=$(TZ="$normalized_to" date -d "@$now_epoch" "+%Y-%m-%d %H:%M (%Z)" 2>/dev/null); then
+    echo "Error: Invalid target timezone '$to_tz'"
+    return 1
+  fi
+
+  local local_time=$(date "+%Y-%m-%d %H:%M (%Z)")
+  echo "Local time $local_time is $result"
 }
 
 if [[ "$1" == "--to" ]]; then
@@ -287,11 +414,17 @@ if [[ "$1" == "--to" ]]; then
     convert_now_to_target "$2"
   else
     show_help
+    exit 1
   fi
 elif [[ $# -eq 2 ]]; then
   convert_to_local "$1" "$2"
-else
+elif [[ $# -eq 0 ]]; then
   show_help
+  exit 1
+else
+  echo "Error: Invalid number of arguments"
+  show_help
+  exit 1
 fi
 EOF
 
