@@ -6,10 +6,10 @@ UTILS_DIR="$HOME/.local/bin"
 mkdir -p "$UTILS_DIR"
 
 if ! echo "$PATH" | grep -q "$UTILS_DIR"; then
-	echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> ~/.bashrc
+	echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >>~/.bashrc
 fi
 
-cat << 'EOF' > ~/.bash_functions
+cat <<'EOF' >~/.bash_functions
 
 cdup() {
 	if [ $# -eq 0 ]; then
@@ -57,7 +57,7 @@ cddown() {
 }
 EOF
 
-cat << 'EOF' > "$UTILS_DIR/table"
+cat <<'EOF' >"$UTILS_DIR/table"
 #!/bin/bash
 
 # For displaying CSV in tabular format
@@ -116,7 +116,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
 fi
 EOF
 
-cat << 'EOF' > "$UTILS_DIR/lookport"
+cat <<'EOF' >"$UTILS_DIR/lookport"
 #!/bin/bash
 
 lookport() {
@@ -170,7 +170,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
 fi
 EOF
 
-cat << 'EOF' > "$UTILS_DIR/killport"
+cat <<'EOF' >"$UTILS_DIR/killport"
 #!/bin/bash
 
 killport() {
@@ -243,16 +243,61 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
 fi
 EOF
 
+cat <<'EOF' >"$UTILS_DIR/tzone"
+#!/bin/bash
+
+show_help() {
+	echo "Usage:"
+	echo "	tzone 20:00 PST             Convert to local timezone"
+  echo "  tzone --to 20:00 PST EEST   Convert to specified timezone"
+  echo "  tzone --from 20:00 PST      Convert from local to specified timezone"
+}
+
+convert_to_local() {
+  local time="$1"
+  local from="$2"
+  TZ="$from" date --date="time" + "$time $from is %Y-%m-%d %H:%M (%Z) in you local time"
+}
+
+convert_to_target() {
+  local time="$1"
+  local from="$2"
+  local to="$3"
+  local utc_time
+  utc_time=$(TZ="$from" date -u --date="$time" "+%Y-%m-%d %H:%M")
+  TZ="$to" date --date="$utc_time UTC" +"$time $from is %Y-%m-%d %H:%M (%Z) in $to"
+}
+
+convert_from_local() {
+  local time="$1"
+  local to="$2"
+  local utc_time
+  utc_time=$(date -u --date="$time" "+%Y-%m-%d %H:%M")
+  TZ="$to" date --date="$utc_time UTC" +"$time local is %Y-%m-%d %H:%M (%Z) in $to"
+}
+
+if [[ "$1" == "--to" ]]; then
+    convert_to_target "$2" "$3" "$4"
+elif [[ "$1" == "--from" ]]; then
+    convert_from_local "$2" "$3"
+elif [[ "$1" == "--help" || "$#" -lt 2 ]]; then
+    show_help
+else
+    convert_to_local "$1" "$2"
+fi
+EOF
+
 chmod +x "$UTILS_DIR/table"
 chmod +x "$UTILS_DIR/lookport"
 chmod +x "$UTILS_DIR/killport"
+chmod +x "$UTILS_DIR/tzone"
 
-echo "" >> ~/.bashrc
-echo "# CUSTOM UTILITIES" >> ~/.bashrc
-echo "source ~/.bash_functions" >> ~/.bashrc
-echo "" >> ~/.bashrc
-echo "# Custom aliases" >> ~/.bashrc
-echo "alias ll='ls -la'" >> ~/.bashrc
+echo "" >>~/.bashrc
+echo "# CUSTOM UTILITIES" >>~/.bashrc
+echo "source ~/.bash_functions" >>~/.bashrc
+echo "" >>~/.bashrc
+echo "# Custom aliases" >>~/.bashrc
+echo "alias ll='ls -la'" >>~/.bashrc
 
 echo "Installing required packages..."
 sudo apt update
@@ -262,9 +307,10 @@ echo ""
 echo "Setup complete! Run 'source ~/.bashrc' or restart your terminal."
 echo ""
 echo "Available commands"
-echo "  ll                  - Alias for 'ls -la' (detailed list)"
-echo "  cdup <dir_name>     - Navigate up to find directory"
-echo "  cddown <dir_name>   - Navigate down to find directory"
-echo "  table <csv_file>    - Display CSV in table format"
-echo "  lookport <port>     - Show processes on port"
-echo "  killport <port>     - Kill processes on port"
+echo "  ll                          - Alias for 'ls -la' (detailed list)"
+echo "  cdup <dir_name>             - Navigate up to find directory"
+echo "  cddown <dir_name>           - Navigate down to find directory"
+echo "  table <csv_file>            - Display CSV in table format"
+echo "  lookport <port>             - Show processes on port"
+echo "  killport <port>             - Kill processes on port"
+echo "  tzone <time> <timezone>     - Timezone conversion"

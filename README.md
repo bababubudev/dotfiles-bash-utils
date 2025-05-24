@@ -8,10 +8,16 @@ My personal collection of bash utilities and shortcuts.
 git clone https://github.com/bababubudev/dotfiles-bash-utils.git
 cd dotfiles-bash-utils
 
+# Depending on the shell type
+chmod +x install_zsh.sh
+./install_zsh.sh
+
 chmod +x install.sh
 ./install.sh
 
 source ~/.bashrc
+
+source ~/.zshrc
 ```
 
 ## 📋 What You Get
@@ -27,6 +33,9 @@ source ~/.bashrc
 ### Port Management
 - **`lookport <port>`** - Show processes using specific port
 - **`killport <port>`** - Kill processes on specific port (with confirmation)
+
+### Extras
+- **`tzone <time> <timezone>`** - Timezone conversion
 
 ## 💡 Usage Examples
 
@@ -46,6 +55,10 @@ lookport 3000
 
 # Kill processes on port 8080
 killport 8080
+
+# Timezone conversion from pst to eest or from local to pst
+tzone --to 20:00 PST EEST
+tzone --from 20:00 PST
 ```
 
 ## What It Does
@@ -53,7 +66,7 @@ killport 8080
 The installer:
 - Creates utilities in `~/.local/bin`
 - Adds custom functions to `~/.bash_functions`
-- Updates your `~/.bashrc` safely (no duplicates on re-runs)
+- Updates your `~/.bashrc` or `~/.zshrc` safely (no duplicates on re-runs)
 - Installs required system packages (`net-tools`, `lsof`)
 - Makes everything executable and ready to use
 
@@ -67,7 +80,7 @@ The installer:
 ## Requirements
 
 - Debian/Ubuntu-based system (or WSL)
-- Bash shell
+- Bash shell or Zsh shell
 - `sudo` access for package installation
 
 ## File Structure
@@ -78,8 +91,8 @@ The installer:
 ├── lookport   # Port process viewer
 └── killport   # Port process killer
 
-~/.bash_functions  # Navigation functions (cdup, cddown)
-~/.bashrc          # Updated with aliases and sourcing
+~/.bash_functions            # Navigation functions (cdup, cddown)
+~/.bashrc | ~/.zshrc         # Updated with aliases and sourcing
 ```
 
 ## Personal Project
