@@ -2,7 +2,7 @@
 
 My personal collection of bash utilities and shortcuts.
 
-## 🚀 Installation
+## Installation
 
 ```bash
 git clone https://github.com/bababubudev/dotfiles-bash-utils.git
@@ -20,7 +20,7 @@ source ~/.bashrc
 source ~/.zshrc
 ```
 
-## 📋 What You Get
+## What You Get
 
 ### Navigation
 - **`ll`** :  `ls -la`
@@ -37,7 +37,7 @@ source ~/.zshrc
 ### Extras
 - **`tzone <time> <timezone>`** - Timezone conversion
 
-## 💡 Usage Examples
+## Usage Examples
 
 ```bash
 # Navigate to parent 'project' directory from anywhere in the tree
@@ -101,6 +101,6 @@ The installer:
 
 This is my personal dotfiles repository for bash utilities. Feel free to fork and adapt for your own use!
 
-## 📄 License
+## License
 
 MIT License - use freely in your projects.
